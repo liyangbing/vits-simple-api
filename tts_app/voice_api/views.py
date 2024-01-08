@@ -414,6 +414,7 @@ def voice_bert_vits2_api():
         text_prompt = get_param(request_data, 'text_prompt', None, str)
         style_text = get_param(request_data, 'style_text', None, str)
         style_weight = get_param(request_data, 'style_weight', current_app.config.get("STYLE_WEIGHT", 0.7), float)
+        file_name  = get_param(request_data, 'file_name', None, str)
     except Exception as e:
         logger.error(f"[{ModelType.BERT_VITS2.value}] {e}")
         return make_response("parameter error", 400)
@@ -462,7 +463,10 @@ def voice_bert_vits2_api():
         format = "mp3"
         logger.warning("Streaming response only supports MP3 format.")
 
-    fname = f"{str(uuid.uuid1())}.{format}"
+    if file_name:
+        fname = file_name + "." + format
+    else:
+        fname = f"{str(uuid.uuid1())}.{format}"
     file_type = f"audio/{format}"
     state = {"text": text,
              "id": id,
@@ -503,7 +507,9 @@ def voice_bert_vits2_api():
         path = os.path.join(current_app.config.get('CACHE_PATH'), fname)
         save_audio(audio.getvalue(), path)
 
-    return send_file(path_or_file=audio, mimetype=file_type, download_name=fname)
+    return make_response(jsonify({"status": "success", "file_name": file_name}), 200)
+
+    #return send_file(path_or_file=audio, mimetype=file_type, download_name=fname)
 
 
 @voice_api.route('/check', methods=["GET", "POST"])
