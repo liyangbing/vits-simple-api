@@ -5,6 +5,7 @@ from io import BytesIO
 
 from flask import request, jsonify, make_response, send_file, Blueprint, current_app
 from werkzeug.utils import secure_filename
+from utils.http_util import response_success
 
 from logger import logger
 from contants import ModelType
@@ -507,7 +508,9 @@ def voice_bert_vits2_api():
         path = os.path.join(current_app.config.get('CACHE_PATH'), fname)
         save_audio(audio.getvalue(), path)
 
-    return make_response(jsonify({"status": "success", "file_name": file_name}), 200)
+    return response_success({"file_name": path})
+
+    #return make_response(jsonify({"status": "success", "file_name": path}), 200)
 
     #return send_file(path_or_file=audio, mimetype=file_type, download_name=fname)
 
