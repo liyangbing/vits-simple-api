@@ -384,7 +384,7 @@ def dimensional_emotion_api():
     return send_file(path_or_file=emotion_npy, mimetype=file_type, download_name=fname)
 
 
-@voice_api.route('/bert-vits2', methods=["GET", "POST"])
+@voice_api.route('/inference', methods=["GET", "POST"])
 @require_api_key
 def voice_bert_vits2_api():
     try:
@@ -413,9 +413,13 @@ def voice_bert_vits2_api():
         emotion = get_param(request_data, 'emotion', None, int)
         reference_audio = request.files.get("reference_audio", None)
         text_prompt = get_param(request_data, 'text_prompt', None, str)
+        if not text_prompt:
+            text_prompt = "1"
         style_text = get_param(request_data, 'style_text', None, str)
         style_weight = get_param(request_data, 'style_weight', current_app.config.get("STYLE_WEIGHT", 0.7), float)
         file_name  = get_param(request_data, 'file_name', None, str)
+        prefix = get_param(request_data, 'prefix', None, str)
+        tag = get_param(request_data, 'tag', None, str)
     except Exception as e:
         logger.error(f"[{ModelType.BERT_VITS2.value}] {e}")
         return make_response("parameter error", 400)
@@ -503,10 +507,20 @@ def voice_bert_vits2_api():
         t2 = time.time()
         logger.info(f"[{ModelType.BERT_VITS2.value}] finish in {(t2 - t1):.2f}s")
 
+    
+
     if current_app.config.get("SAVE_AUDIO", False):
         logger.debug(f"[{ModelType.BERT_VITS2.value}] {fname}")
-        path = os.path.join(current_app.config.get('CACHE_PATH'), fname)
+
+        path = os.path.join(current_app.config.get('CACHE_PATH'), tag, prefix)
+        if not os.path.exists(path):
+            os.makedirs(path, exist_ok=True)
+
+        path = os.path.join(path, fname)
         save_audio(audio.getvalue(), path)
+
+        #
+        path = path.replace(current_app.config.get('CACHE_PATH') + "/", '')
 
     return response_success({"file_name": path})
 

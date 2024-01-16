@@ -16,11 +16,14 @@ PORT = 23456
 # Absolute path of vits-simple-api
 ABS_PATH = os.path.dirname(os.path.realpath(__file__))
 
+print(ABS_PATH)
+
 # Upload path
 UPLOAD_FOLDER = ABS_PATH + "/upload"
 
+
 # Cahce path
-CACHE_PATH = ABS_PATH + "/cache"
+CACHE_PATH = "/data/2d-digital"
 
 # Logs path
 LOGS_PATH = ABS_PATH + "/logs"
@@ -29,10 +32,10 @@ LOGS_PATH = ABS_PATH + "/logs"
 LOGS_BACKUPCOUNT = 30
 
 # If CLEAN_INTERVAL_SECONDS <= 0, the cleaning task will not be executed.
-CLEAN_INTERVAL_SECONDS = 3600
+CLEAN_INTERVAL_SECONDS = 0
 
 # save audio to CACHE_PATH
-SAVE_AUDIO = False
+SAVE_AUDIO = True
 
 # zh ja ko en... If it is empty, it will be read based on the text_cleaners specified in the config.json.
 LANGUAGE_AUTOMATIC_DETECT = []

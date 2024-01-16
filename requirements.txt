@@ -35,7 +35,7 @@ sentencepiece==0.1.99
 jaconv
 
 # Machine Learning and Deep Learning
-torch
+torch==1.13.0
 audonnx
 vector_quantize_pytorch
 
