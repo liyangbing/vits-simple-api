@@ -21,7 +21,7 @@ start() {
 
 stop() {
     echo "Stopping program..."
-    pkill -f "gunicorn -w 1 -k gevent -b 0.0.0.0:50004 app:app"
+    pkill -f "gunicorn -w 1 -k gevent -b 0.0.0.0:50001 app:app"
 }
 
 case $1 in

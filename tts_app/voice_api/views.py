@@ -13,6 +13,7 @@ from tts_app.voice_api.auth import require_api_key
 from tts_app.model_manager import model_manager, tts_manager
 from tts_app.voice_api.utils import *
 from utils.data_utils import check_is_none
+import wave
 
 voice_api = Blueprint("voice_api", __name__)
 
@@ -519,14 +520,24 @@ def voice_bert_vits2_api():
         path = os.path.join(path, fname)
         save_audio(audio.getvalue(), path)
 
+        audio_length = get_wav_duration(path)
+
         #
         path = path.replace(current_app.config.get('CACHE_PATH') + "/", '')
 
-    return response_success({"file_name": path})
+
+    return response_success({"file_name": path, "audio_length": audio_length})
 
     #return make_response(jsonify({"status": "success", "file_name": path}), 200)
 
     #return send_file(path_or_file=audio, mimetype=file_type, download_name=fname)
+
+def get_wav_duration(file_path):
+    with wave.open(file_path, 'r') as wav_file:
+        frames = wav_file.getnframes()    # 获取帧数
+        rate = wav_file.getframerate()    # 获取帧速率
+        duration = frames / float(rate)   # 计算时长
+        return duration
 
 
 @voice_api.route('/check', methods=["GET", "POST"])
