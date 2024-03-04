@@ -504,11 +504,23 @@ def voice_bert_vits2_api():
     else:
         t1 = time.time()
         # audio = tts_manager.bert_vits2_infer(state)
-        audio = tts_manager.bert_vits2_infer_multilang(state)
+        # audio = tts_manager.bert_vits2_infer_multilang(state)
+        # t2 = time.time()
+        # logger.info(f"[{ModelType.BERT_VITS2.value}] finish in {(t2 - t1):.2f}s")
+
+        ssml = f"""
+            <speak lang="{lang}" format="{format}" length="{length}">
+                    {text}
+                </speak>
+            """
+        voice_tasks, format = tts_manager.parse_ssml(ssml)
+        fname = f"{str(uuid.uuid1())}.{format}"
+        file_type = f"audio/{format}"
+
+        t1 = time.time()
+        audio = tts_manager.process_ssml_infer_task(voice_tasks, format)
         t2 = time.time()
         logger.info(f"[{ModelType.BERT_VITS2.value}] finish in {(t2 - t1):.2f}s")
-
-    
 
     if current_app.config.get("SAVE_AUDIO", False):
         logger.debug(f"[{ModelType.BERT_VITS2.value}] {fname}")
