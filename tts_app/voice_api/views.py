@@ -514,8 +514,6 @@ def voice_bert_vits2_api():
                 </speak>
             """
         voice_tasks, format = tts_manager.parse_ssml(ssml)
-        fname = f"{str(uuid.uuid1())}.{format}"
-        file_type = f"audio/{format}"
 
         t1 = time.time()
         audio = tts_manager.process_ssml_infer_task(voice_tasks, format)
