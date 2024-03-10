@@ -14,8 +14,14 @@ from tts_app.model_manager import model_manager, tts_manager
 from tts_app.voice_api.utils import *
 from utils.data_utils import check_is_none
 import wave
+from cos_db import COSDB
 
 voice_api = Blueprint("voice_api", __name__)
+BUCKET = "net-pan-1323472688"
+REGION = "ap-shanghai"
+DATA_DIR = "/data"
+PREFIX = "roleip/"
+cosdb = COSDB(os.environ["ACCESS_KEY_ID"], os.environ["ACCESS_KEY_SECRET"], REGION, BUCKET)
 
 
 def get_param(request_data, key, default, data_type=None):
@@ -421,6 +427,7 @@ def voice_bert_vits2_api():
         file_name  = get_param(request_data, 'file_name', None, str)
         prefix = get_param(request_data, 'prefix', None, str)
         tag = get_param(request_data, 'tag', None, str)
+        upload_oss_flag = get_param(request_data, 'upload_oss', 0, int)
     except Exception as e:
         logger.error(f"[{ModelType.BERT_VITS2.value}] {e}")
         return make_response("parameter error", 400)
@@ -535,12 +542,17 @@ def voice_bert_vits2_api():
         #
         path = path.replace(current_app.config.get('CACHE_PATH') + "/", '')
 
+    if upload_oss_flag == 1:
+        output_file = os.path.join(current_app.config.get("CACHE_PATH"), tag, prefix)
+        output_file = os.path.join(output_file, fname)
+        output_file_name = output_file.replace(DATA_DIR + "/", "")
+        cosdb.upload_file(audio.getvalue(), PREFIX + output_file_name, "audio/wav")
 
     return response_success({"file_name": path, "audio_length": audio_length})
 
-    #return make_response(jsonify({"status": "success", "file_name": path}), 200)
+    # return make_response(jsonify({"status": "success", "file_name": path}), 200)
 
-    #return send_file(path_or_file=audio, mimetype=file_type, download_name=fname)
+    # return send_file(path_or_file=audio, mimetype=file_type, download_name=fname)
 
 def get_wav_duration(file_path):
     with wave.open(file_path, 'r') as wav_file:
