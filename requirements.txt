@@ -57,4 +57,4 @@ protobuf==3.20.1
 tqdm
 PyYAML
 py-cpuinfo
-cos-python-sdk-v5
+cos-python-sdk-v5==1.9.27

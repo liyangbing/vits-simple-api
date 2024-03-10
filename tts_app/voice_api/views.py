@@ -546,7 +546,7 @@ def voice_bert_vits2_api():
         output_file = os.path.join(current_app.config.get("CACHE_PATH"), tag, prefix)
         output_file = os.path.join(output_file, fname)
         output_file_name = output_file.replace(DATA_DIR + "/", "")
-        cosdb.upload_file(audio.getvalue(), PREFIX + output_file_name, "audio/wav")
+        cosdb.upload_file(BytesIO(audio.getvalue()), PREFIX + output_file_name, "audio/wav")
 
     return response_success({"file_name": path, "audio_length": audio_length})
 
