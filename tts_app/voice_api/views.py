@@ -14,14 +14,14 @@ from tts_app.model_manager import model_manager, tts_manager
 from tts_app.voice_api.utils import *
 from utils.data_utils import check_is_none
 import wave
-import cos_db
+from tts_app.voice_api.cos_db import COSDB
 
 voice_api = Blueprint("voice_api", __name__)
 BUCKET = "net-pan-1323472688"
 REGION = "ap-shanghai"
 DATA_DIR = "/data"
 PREFIX = "roleip/"
-cosdb = cos_db.COSDB(os.environ["ACCESS_KEY_ID"], os.environ["ACCESS_KEY_SECRET"], REGION, BUCKET)
+cosdb = COSDB(os.environ["ACCESS_KEY_ID"], os.environ["ACCESS_KEY_SECRET"], REGION, BUCKET)
 
 
 def get_param(request_data, key, default, data_type=None):
