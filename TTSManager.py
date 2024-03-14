@@ -185,7 +185,7 @@ class TTSManager(Observer):
                                             })
 
                 # 分段末尾停顿0.75s
-                voice_tasks.append({"break": 0.75})
+                #voice_tasks.append({"break": 0.75})
             elif element.tag == "break":
                 # brk_count大于0说明voice标签中有break
                 if brk_count > 0:
