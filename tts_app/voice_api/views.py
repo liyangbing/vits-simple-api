@@ -521,7 +521,8 @@ def voice_bert_vits2_api():
                 </speak>
             """
         voice_tasks, format = tts_manager.parse_ssml(ssml)
-
+        fname = f"{str(uuid.uuid1())}.{format}"
+        file_type = f"audio/{format}"
         t1 = time.time()
         audio = tts_manager.process_ssml_infer_task(voice_tasks, format)
         t2 = time.time()
@@ -546,7 +547,9 @@ def voice_bert_vits2_api():
         output_file = os.path.join(current_app.config.get("CACHE_PATH"), tag, prefix)
         output_file = os.path.join(output_file, fname)
         output_file_name = output_file.replace(DATA_DIR + "/", "")
-        cosdb.upload_file(BytesIO(audio.getvalue()), PREFIX + output_file_name, "audio/wav")
+        cosdb.upload_file(
+            BytesIO(audio.getvalue()), PREFIX + output_file_name, file_type
+        )
 
     return response_success({"file_name": path, "audio_length": audio_length})
 
