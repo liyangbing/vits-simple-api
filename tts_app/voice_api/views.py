@@ -15,6 +15,7 @@ from tts_app.voice_api.utils import *
 from utils.data_utils import check_is_none
 import wave
 from tts_app.voice_api.cos_db import COSDB
+import base64
 
 voice_api = Blueprint("voice_api", __name__)
 BUCKET = "net-pan-1323472688"
@@ -428,6 +429,7 @@ def voice_bert_vits2_api():
         prefix = get_param(request_data, 'prefix', None, str)
         tag = get_param(request_data, 'tag', None, str)
         upload_oss_flag = get_param(request_data, 'upload_oss', 0, int)
+        need_base64 = get_param(request_data, "need_base64", 0, int)
     except Exception as e:
         logger.error(f"[{ModelType.BERT_VITS2.value}] {e}")
         return make_response("parameter error", 400)
@@ -551,7 +553,14 @@ def voice_bert_vits2_api():
             BytesIO(audio.getvalue()), PREFIX + output_file_name, file_type
         )
 
-    return response_success({"file_name": path, "audio_length": audio_length})
+    if need_base64 == 1:
+        audio.seek(0)
+        encoded_wav = base64.b64encode(audio.read()).decode("utf-8")
+        return response_success(
+            {"file_name": path, "audio_length": audio_length, "base64_wav": encoded_wav}
+        )
+    else:
+        return response_success({"file_name": path, "audio_length": audio_length})
 
     # return make_response(jsonify({"status": "success", "file_name": path}), 200)
 
