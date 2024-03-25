@@ -544,23 +544,29 @@ def voice_bert_vits2_api():
 
         #
         path = path.replace(current_app.config.get('CACHE_PATH') + "/", '')
+    output_file = os.path.join(tag, prefix)
+    output_file = os.path.join(output_file, fname)
+    if output_file.startswith('/') or output_file.startswith('\\'):
+        output_file = output_file[1:]
+        output_file = output_file.replace('\\', '/')
 
     if upload_oss_flag == 1:
-        output_file = os.path.join(current_app.config.get("CACHE_PATH"), tag, prefix)
-        output_file = os.path.join(output_file, fname)
-        output_file_name = output_file.replace(DATA_DIR + "/", "")
-        cosdb.upload_file(
-            BytesIO(audio.getvalue()), PREFIX + output_file_name, file_type
-        )
+        cosdb.upload_file(BytesIO(audio.getvalue()), PREFIX + output_file, file_type)
 
     if need_base64 == 1:
         audio.seek(0)
         encoded_wav = base64.b64encode(audio.read()).decode("utf-8")
         return response_success(
-            {"file_name": path, "audio_length": audio_length, "base64_wav": encoded_wav}
+            {
+                "file_name": output_file,
+                "audio_length": audio_length,
+                "base64_wav": encoded_wav,
+            }
         )
     else:
-        return response_success({"file_name": path, "audio_length": audio_length})
+        return response_success(
+            {"file_name": output_file, "audio_length": audio_length}
+        )
 
     # return make_response(jsonify({"status": "success", "file_name": path}), 200)
 
