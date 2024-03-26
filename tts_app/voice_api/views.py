@@ -544,11 +544,10 @@ def voice_bert_vits2_api():
 
         #
         path = path.replace(current_app.config.get('CACHE_PATH') + "/", '')
-    output_file = os.path.join(tag, prefix)
-    output_file = os.path.join(output_file, fname)
+    output_file = os.path.join(tag, prefix, fname)
+    output_file = os.path.normpath(output_file).replace("\\", "/")
     if output_file.startswith('/') or output_file.startswith('\\'):
         output_file = output_file[1:]
-        output_file = output_file.replace('\\', '/')
 
     if upload_oss_flag == 1:
         cosdb.upload_file(BytesIO(audio.getvalue()), PREFIX + output_file, file_type)
