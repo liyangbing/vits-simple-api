@@ -24,6 +24,7 @@ UPLOAD_FOLDER = ABS_PATH + "/upload"
 
 # Cahce path
 CACHE_PATH = "/data/2d-digital"
+DATA_DIR = "/data"
 
 # Logs path
 LOGS_PATH = ABS_PATH + "/logs"

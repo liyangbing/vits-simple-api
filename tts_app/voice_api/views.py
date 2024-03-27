@@ -20,7 +20,7 @@ import base64
 voice_api = Blueprint("voice_api", __name__)
 BUCKET = "net-pan-1323472688"
 REGION = "ap-shanghai"
-DATA_DIR = "/data"
+DATA_DIR = current_app.config.get("DATA_DIR", "/data")
 PREFIX = "roleip/"
 cosdb = COSDB(os.environ["ACCESS_KEY_ID"], os.environ["ACCESS_KEY_SECRET"], REGION, BUCKET)
 
