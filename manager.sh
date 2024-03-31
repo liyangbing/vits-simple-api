@@ -16,12 +16,12 @@ start() {
 
     echo "Starting program..."
 
-    nohup gunicorn -w 1 -k gevent -b 0.0.0.0:50001 app:app &
+    nohup gunicorn -t 60 -w 1 -k gevent -b 0.0.0.0:50001 app:app &
 }
 
 stop() {
     echo "Stopping program..."
-    pkill -f "gunicorn -w 1 -k gevent -b 0.0.0.0:50001 app:app"
+    pkill -f "gunicorn -t 60 -w 1 -k gevent -b 0.0.0.0:50001 app:app"
 }
 
 case $1 in
