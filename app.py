@@ -9,6 +9,7 @@ from utils.data_utils import clean_folder
 from utils.phrases_dict import phrases_dict_init
 from tts_app import frontend, voice_api, auth, admin
 from utils.config_manager import global_config
+import sio
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), 'tts_app', 'templates'),
             static_folder=os.path.join(os.path.dirname(__file__), 'tts_app', 'static'))
@@ -47,6 +48,11 @@ app.register_blueprint(voice_api, url_prefix='/voice')
 if app.config.get("IS_ADMIN_ENABLED", False):
     app.register_blueprint(auth, url_prefix=app.config.get("ADMIN_ROUTE", "/admin"))
     app.register_blueprint(admin, url_prefix=app.config.get("ADMIN_ROUTE", "/admin"))
+
+
+@app.teardown_appcontext
+def shutdown():
+    sio.sio.disconnect()
 
 
 def create_folders(paths):

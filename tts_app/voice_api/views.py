@@ -397,6 +397,7 @@ def dimensional_emotion_api():
 @require_api_key
 def voice_bert_vits2_api():
     try:
+        request_data = None
         if request.method == "GET":
             request_data = request.args
         elif request.method == "POST":
@@ -405,31 +406,72 @@ def voice_bert_vits2_api():
                 request_data = request.get_json()
             else:
                 request_data = request.form
+        return inner_voice_bert_vits2_api(request_data)
+    except Exception as e:
+        logger.error(f"[{ModelType.BERT_VITS2.value}] {e}")
+        return make_response("parameter error", 400)
 
+    
+
+    # return make_response(jsonify({"status": "success", "file_name": path}), 200)
+
+    # return send_file(path_or_file=audio, mimetype=file_type, download_name=fname)
+
+def inner_voice_bert_vits2_api(request_data):
+    try:
         text = get_param(request_data, "text", "", str)
-        id = get_param(request_data, "id", current_app.config.get("ID", 0), int)
-        format = get_param(request_data, "format", current_app.config.get("FORMAT", "wav"), str)
-        lang = get_param(request_data, "lang", current_app.config.get("LANG", "auto"), str).lower()
-        length = get_param(request_data, "length", current_app.config.get("LENGTH", 1), float)
-        length_zh = get_param(request_data, "length_zh", current_app.config.get("LENGTH_ZH", 0), float)
-        length_ja = get_param(request_data, "length_ja", current_app.config.get("LENGTH_JA", 0), float)
-        length_en = get_param(request_data, "length_en", current_app.config.get("LENGTH_EN", 0), float)
-        noise = get_param(request_data, "noise", current_app.config.get("NOISE", 0.667), float)
-        noisew = get_param(request_data, "noisew", current_app.config.get("NOISEW", 0.8), float)
-        sdp_ratio = get_param(request_data, "sdp_ratio", current_app.config.get("SDP_RATIO", 0.2), float)
-        segment_size = get_param(request_data, "segment_size", current_app.config.get("SEGMENT_SIZE", 50), int)
-        use_streaming = get_param(request_data, 'streaming', False, bool)
-        emotion = get_param(request_data, 'emotion', None, int)
+        id = get_param(request_data, "id", config.ID, int)
+
+        format = get_param(
+            request_data, "format", config.FORMAT, str
+        )
+        lang = get_param(
+            request_data, "lang", config.LANG, str
+        ).lower()
+        length = get_param(
+            request_data, "length", config.LENGTH, float
+        )
+        length_zh = get_param(
+            request_data, "length_zh", config.LENGTH_ZH, float
+        )
+        length_ja = get_param(
+            request_data, "length_ja", config.LENGTH_JA, float
+        )
+        length_en = get_param(
+            request_data, "length_en", config.LENGTH_EN, float
+        )
+        noise = get_param(
+            request_data, "noise", config.NOISE, float
+        )
+        noisew = get_param(
+            request_data, "noisew", config.NOISEW, float
+        )
+        sdp_ratio = get_param(
+            request_data, "sdp_ratio", config.SDP_RATIO, float
+        )
+        segment_size = get_param(
+            request_data,
+            "segment_size",
+            current_app.config.get("SEGMENT_SIZE", 50),
+            int,
+        )
+        use_streaming = get_param(request_data, "streaming", False, bool)
+        emotion = get_param(request_data, "emotion", None, int)
         reference_audio = request.files.get("reference_audio", None)
-        text_prompt = get_param(request_data, 'text_prompt', None, str)
+        text_prompt = get_param(request_data, "text_prompt", None, str)
         if not text_prompt:
             text_prompt = "1"
-        style_text = get_param(request_data, 'style_text', None, str)
-        style_weight = get_param(request_data, 'style_weight', current_app.config.get("STYLE_WEIGHT", 0.7), float)
-        file_name  = get_param(request_data, 'file_name', None, str)
-        prefix = get_param(request_data, 'prefix', None, str)
-        tag = get_param(request_data, 'tag', None, str)
-        upload_oss_flag = get_param(request_data, 'upload_oss', 0, int)
+        style_text = get_param(request_data, "style_text", None, str)
+        style_weight = get_param(
+            request_data,
+            "style_weight",
+            current_app.config.get("STYLE_WEIGHT", 0.7),
+            float,
+        )
+        file_name = get_param(request_data, "file_name", None, str)
+        prefix = get_param(request_data, "prefix", None, str)
+        tag = get_param(request_data, "tag", None, str)
+        upload_oss_flag = get_param(request_data, "upload_oss", 0, int)
         need_base64 = get_param(request_data, "need_base64", 0, int)
     except Exception as e:
         logger.error(f"[{ModelType.BERT_VITS2.value}] {e}")
@@ -437,39 +479,75 @@ def voice_bert_vits2_api():
 
     logger.info(
         f"[{ModelType.BERT_VITS2.value}] id:{id} format:{format} lang:{lang} length:{length} noise:{noise} noisew:{noisew} sdp_ratio:{sdp_ratio} segment_size:{segment_size}"
-        f" length_zh:{length_zh} length_ja:{length_ja} length_en:{length_en}")
+        f" length_zh:{length_zh} length_ja:{length_ja} length_en:{length_en}"
+    )
     if reference_audio:
-        logger.info(f"[{ModelType.BERT_VITS2.value}] reference_audio:{reference_audio.filename}")
+        logger.info(
+            f"[{ModelType.BERT_VITS2.value}] reference_audio:{reference_audio.filename}"
+        )
     elif emotion:
         logger.info(f"[{ModelType.BERT_VITS2.value}] emotion:{emotion}")
     elif text_prompt:
         logger.info(f"[{ModelType.BERT_VITS2.value}] text_prompt:{text_prompt}")
     elif style_text:
-        logger.info(f"[{ModelType.BERT_VITS2.value}] style_text:{style_text} style_weight:{style_weight}")
+        logger.info(
+            f"[{ModelType.BERT_VITS2.value}] style_text:{style_text} style_weight:{style_weight}"
+        )
     logger.info(f"[{ModelType.BERT_VITS2.value}] len:{len(text)} text：{text}")
 
     if check_is_none(text):
         logger.info(f"[{ModelType.BERT_VITS2.value}] text is empty")
-        return make_response(jsonify({"status": "error", "message": "text is empty"}), 400)
+        return make_response(
+            jsonify({"status": "error", "message": "text is empty"}), 400
+        )
 
     if check_is_none(id):
         logger.info(f"[{ModelType.BERT_VITS2.value}] speaker id is empty")
-        return make_response(jsonify({"status": "error", "message": "speaker id is empty"}), 400)
+        return make_response(
+            jsonify({"status": "error", "message": "speaker id is empty"}), 400
+        )
 
     if id < 0 or id >= model_manager.bert_vits2_speakers_count:
         logger.info(f"[{ModelType.BERT_VITS2.value}] speaker id {id} does not exist")
-        return make_response(jsonify({"status": "error", "message": f"id {id} does not exist"}), 400)
+        return make_response(
+            jsonify({"status": "error", "message": f"id {id} does not exist"}), 400
+        )
 
     if emotion and (emotion < 0 or emotion > 9):
-        logger.info(f"[{ModelType.BERT_VITS2.value}] emotion {emotion} out of the range 0-9")
-        return make_response(jsonify({"status": "error", "message": f"emotion {emotion} out of the range 0-9"}), 400)
+        logger.info(
+            f"[{ModelType.BERT_VITS2.value}] emotion {emotion} out of the range 0-9"
+        )
+        return make_response(
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"emotion {emotion} out of the range 0-9",
+                }
+            ),
+            400,
+        )
 
     # 校验模型是否支持输入的语言
-    speaker_lang = model_manager.voice_speakers[ModelType.BERT_VITS2.value][id].get('lang')
-    if lang not in ["auto", "mix"] and len(speaker_lang) != 1 and lang not in speaker_lang:
-        logger.info(f"[{ModelType.BERT_VITS2.value}] lang \"{lang}\" is not in {speaker_lang}")
-        return make_response(jsonify({"status": "error", "message": f"lang '{lang}' is not in {speaker_lang}"}),
-                             400)
+    speaker_lang = model_manager.voice_speakers[ModelType.BERT_VITS2.value][id].get(
+        "lang"
+    )
+    if (
+        lang not in ["auto", "mix"]
+        and len(speaker_lang) != 1
+        and lang not in speaker_lang
+    ):
+        logger.info(
+            f'[{ModelType.BERT_VITS2.value}] lang "{lang}" is not in {speaker_lang}'
+        )
+        return make_response(
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"lang '{lang}' is not in {speaker_lang}",
+                }
+            ),
+            400,
+        )
 
     # 如果配置文件中设置了LANGUAGE_AUTOMATIC_DETECT则强制将speaker_lang设置为LANGUAGE_AUTOMATIC_DETECT
     if current_app.config.get("LANGUAGE_AUTOMATIC_DETECT", []) != []:
@@ -484,32 +562,33 @@ def voice_bert_vits2_api():
     else:
         fname = f"{str(uuid.uuid1())}.{format}"
     file_type = f"audio/{format}"
-    state = {"text": text,
-             "id": id,
-             "format": format,
-             "length": length,
-             "length_zh": length_zh,
-             "length_ja": length_ja,
-             "length_en": length_en,
-             "noise": noise,
-             "noisew": noisew,
-             "sdp_ratio": sdp_ratio,
-             "segment_size": segment_size,
-             "lang": lang,
-             "speaker_lang": speaker_lang,
-             "emotion": emotion,
-             "reference_audio": reference_audio,
-             "text_prompt": text_prompt,
-             "style_text": style_text,
-             "style_weight": style_weight,
-             }
+    state = {
+        "text": text,
+        "id": id,
+        "format": format,
+        "length": length,
+        "length_zh": length_zh,
+        "length_ja": length_ja,
+        "length_en": length_en,
+        "noise": noise,
+        "noisew": noisew,
+        "sdp_ratio": sdp_ratio,
+        "segment_size": segment_size,
+        "lang": lang,
+        "speaker_lang": speaker_lang,
+        "emotion": emotion,
+        "reference_audio": reference_audio,
+        "text_prompt": text_prompt,
+        "style_text": style_text,
+        "style_weight": style_weight,
+    }
 
     if use_streaming:
         # audio = tts_manager.stream_bert_vits2_infer(state)
         audio = tts_manager.stream_bert_vits2_infer_mutilang(state)
         response = make_response(audio)
-        response.headers['Content-Disposition'] = f'attachment; filename={fname}'
-        response.headers['Content-Type'] = file_type
+        response.headers["Content-Disposition"] = f"attachment; filename={fname}"
+        response.headers["Content-Type"] = file_type
         return response
     else:
         t1 = time.time()
@@ -534,7 +613,7 @@ def voice_bert_vits2_api():
     if current_app.config.get("SAVE_AUDIO", False):
         logger.debug(f"[{ModelType.BERT_VITS2.value}] {fname}")
 
-        path = os.path.join(current_app.config.get('CACHE_PATH'), tag, prefix)
+        path = os.path.join(config.CACHE_PATH, tag, prefix)
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
 
@@ -544,10 +623,10 @@ def voice_bert_vits2_api():
         audio_length = get_wav_duration(path)
 
         #
-        path = path.replace(current_app.config.get('CACHE_PATH') + "/", '')
+        path = path.replace(config.CACHE_PATH + "/", "")
     output_file = os.path.join(tag, prefix, fname)
     output_file = os.path.normpath(output_file).replace("\\", "/")
-    if output_file.startswith('/') or output_file.startswith('\\'):
+    if output_file.startswith("/") or output_file.startswith("\\"):
         output_file = output_file[1:]
 
     if upload_oss_flag == 1:
@@ -568,9 +647,6 @@ def voice_bert_vits2_api():
             {"file_name": output_file, "audio_length": audio_length}
         )
 
-    # return make_response(jsonify({"status": "success", "file_name": path}), 200)
-
-    # return send_file(path_or_file=audio, mimetype=file_type, download_name=fname)
 
 def get_wav_duration(file_path):
     with wave.open(file_path, 'r') as wav_file:
