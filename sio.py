@@ -2,7 +2,7 @@ import config
 import socketio
 import json
 import logging
-import tts_app.voice_api.views as views
+from tts_app.voice_api.views import inner_voice_bert_vits2_api
 
 
 logger = logging.getLogger(__name__)
@@ -23,16 +23,15 @@ def connect():
 @sio.on("agent_message")
 def receive_message(msg):
     # json 字符串转字典
-    msg = json.loads(msg)
-    logger.info("Received message from server:", msg)
+    logger.info("Received message from server: {}".format(msg))
     retMsg = {
         "room": msg.get("room"),
         "messageId": msg.get("messageId"),
         "messageType": msg.get("messageType"),
         "message": msg.get("message"),
     }
-
-    retMessage = views.inner_voice_bert_vits2_api(msg.get("message"))
+ 
+    retMessage = inner_voice_bert_vits2_api(msg.get("message"))
     retMsg["message"] = retMessage
     send_message("agent_message",retMsg)
 
@@ -43,5 +42,5 @@ def join_room(room):
 
 
 def send_message(msg_type: str, msg: dict):
-    logger.info("Sending message to server:", msg)
+    logger.info("Sending message to server: {}".format(msg))
     sio.emit(msg_type, json.dumps(msg))

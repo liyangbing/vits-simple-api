@@ -1,7 +1,9 @@
 import os
+import re
 import time
 import uuid
 from io import BytesIO
+from weakref import ref
 
 from flask import request, jsonify, make_response, send_file, Blueprint, current_app
 from werkzeug.utils import secure_filename
@@ -452,12 +454,13 @@ def inner_voice_bert_vits2_api(request_data):
         segment_size = get_param(
             request_data,
             "segment_size",
-            current_app.config.get("SEGMENT_SIZE", 50),
+            config.SEGMENT_SIZE,
             int,
         )
         use_streaming = get_param(request_data, "streaming", False, bool)
         emotion = get_param(request_data, "emotion", None, int)
-        reference_audio = request.files.get("reference_audio", None)
+        # reference_audio = request.files.get("reference_audio", None)
+        reference_audio = None
         text_prompt = get_param(request_data, "text_prompt", None, str)
         if not text_prompt:
             text_prompt = "1"
@@ -465,7 +468,7 @@ def inner_voice_bert_vits2_api(request_data):
         style_weight = get_param(
             request_data,
             "style_weight",
-            current_app.config.get("STYLE_WEIGHT", 0.7),
+            config.STYLE_WEIGHT,
             float,
         )
         file_name = get_param(request_data, "file_name", None, str)
@@ -550,8 +553,8 @@ def inner_voice_bert_vits2_api(request_data):
         )
 
     # 如果配置文件中设置了LANGUAGE_AUTOMATIC_DETECT则强制将speaker_lang设置为LANGUAGE_AUTOMATIC_DETECT
-    if current_app.config.get("LANGUAGE_AUTOMATIC_DETECT", []) != []:
-        speaker_lang = current_app.config.get("LANGUAGE_AUTOMATIC_DETECT")
+    if config.LANGUAGE_AUTOMATIC_DETECT != []:
+        speaker_lang = config.LANGUAGE_AUTOMATIC_DETECT
 
     if use_streaming and format.upper() != "MP3":
         format = "mp3"
