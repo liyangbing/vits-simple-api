@@ -3,6 +3,7 @@ import socketio
 import json
 import logging
 from tts_app.voice_api.views import inner_voice_bert_vits2_api
+import mem_cache
 
 
 logger = logging.getLogger(__name__)
@@ -18,6 +19,7 @@ sio.emit("agent_join", json.dumps({"api_key": api_key, "service_type": "wav2lip"
 @sio.on("connect")
 def connect():
     logger.info("Connected to server")
+    sio.emit("agent_join", json.dumps({"api_key": api_key, "service_type": "wav2lip"}))
 
 
 @sio.on("agent_message")
@@ -30,10 +32,19 @@ def receive_message(msg):
         "messageType": msg.get("messageType"),
         "message": msg.get("message"),
     }
- 
+    if mem_cache.get_from_cache(msg.get("messageId")):
+        cache_msg = mem_cache.get_from_cache(msg.get("messageId"))
+        if cache_msg == msg.get("message"):
+            return
+        else:
+            retMsg["message"] = cache_msg
+            send_message("agent_message", retMsg)
+            return
+    mem_cache.add_to_cache(msg.get("messageId"), msg.get("message"), 10*60)
     retMessage = inner_voice_bert_vits2_api(msg.get("message"))
     retMsg["message"] = retMessage
-    send_message("agent_message",retMsg)
+    mem_cache.add_to_cache(msg.get("messageId"), retMessage, 10*60)
+    send_message("agent_message", retMsg)
 
 
 @sio.on("agent_join")
