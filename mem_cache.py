@@ -17,7 +17,14 @@ def add_to_cache(key, value, expire_time):
 def get_from_cache(key):
     global global_cache
     with cache_lock:
-        return global_cache.get(key)
+        cache_res = global_cache.get(key)
+        if cache_res is None:
+            return None
+        if cache_res["expire_time"] < time.time():
+            # 缓存过期
+            del global_cache[key]
+            return None
+        return cache_res["value"]
 
 
 # 示例用法

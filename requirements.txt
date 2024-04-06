@@ -58,3 +58,6 @@ tqdm
 PyYAML
 py-cpuinfo
 cos-python-sdk-v5==1.9.27
+python-socketio>=5.11.2
+requests
+websocket-client

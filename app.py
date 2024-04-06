@@ -51,7 +51,7 @@ if app.config.get("IS_ADMIN_ENABLED", False):
 
 
 @app.teardown_appcontext
-def shutdown():
+def shutdown(exception=None):
     sio.sio.disconnect()
 
 
