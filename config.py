@@ -163,7 +163,8 @@ def get_config(config_key=None):
         or "",
         "ACCESS_KEY_SECRET": os.environ.get("ACCESS_KEY_SECRET")
         or "",
-        "SERVER_URL": "https://api.roleip.com:8443",
+        "SERVER_URL": configloader.get("settings", "SERVER_URL", fallback="https://api.roleip.com:8443"),
+
     }
 
     if config_key:
