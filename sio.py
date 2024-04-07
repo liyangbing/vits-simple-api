@@ -4,6 +4,8 @@ import json
 import logging
 from tts_app.voice_api.views import inner_voice_bert_vits2_api
 import mem_cache
+import threading
+import time
 
 
 logger = logging.getLogger(__name__)
@@ -60,3 +62,25 @@ def join_room(room):
 def send_message(msg_type: str, msg: dict):
     logger.info("Sending message to server: {}".format(msg))
     sio.emit(msg_type, json.dumps(msg))
+
+
+def reconnect():
+    logger.info("Reconnecting to server")
+    while True:
+        try:
+            if not sio.connected:
+                sio.connect(server_url, retry=True)
+                logger.info("Connected to server")
+                sio.emit(
+                    "agent_join",
+                    json.dumps({"api_key": api_key, "service_type": "vits"}),
+                )
+                logger.info("Connect sid: {}".format(sio.sid))
+        except Exception as e:
+            logger.error("Error in reconnect: {}".format(e))
+        time.sleep(60)
+
+
+reconnect_thread = threading.Thread(target=reconnect)
+reconnect_thread.daemon = True
+reconnect_thread.start()
