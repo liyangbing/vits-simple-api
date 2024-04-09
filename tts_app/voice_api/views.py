@@ -19,13 +19,19 @@ import wave
 from tts_app.voice_api.cos_db import COSDB
 import base64
 import config
+import sys_config
 
 voice_api = Blueprint("voice_api", __name__)
-BUCKET = "net-pan-1323472688"
-REGION = "ap-shanghai"
-DATA_DIR = config.DATA_DIR
+BUCKET = str(sys_config.get_config("BUCKET"))
+REGION = str(sys_config.get_config("REGION"))
+DATA_DIR = str(sys_config.get_config("DATA_DIR"))
 PREFIX = "roleip/"
-cosdb = COSDB(os.environ["ACCESS_KEY_ID"], os.environ["ACCESS_KEY_SECRET"], REGION, BUCKET)
+cosdb = COSDB(
+    str(sys_config.get_config("ACCESS_KEY_ID")),
+    str(sys_config.get_config("ACCESS_KEY_SECRET")),
+    REGION,
+    BUCKET,
+)
 
 
 def get_param(request_data, key, default, data_type=None):
@@ -142,7 +148,7 @@ def voice_vits_api():
 
         if current_app.config.get("SAVE_AUDIO", False):
             logger.debug(f"[{ModelType.VITS.value}] {fname}")
-            path = os.path.join(current_app.config.get('CACHE_PATH'), fname)
+            path = os.path.join(str(sys_config.get_config("DATA_DIR")), fname)
             save_audio(audio.getvalue(), path)
 
         return send_file(path_or_file=audio, mimetype=file_type, download_name=fname)
@@ -193,7 +199,7 @@ def voice_hubert_api():
 
     if current_app.config.get("SAVE_AUDIO", False):
         logger.debug(f"[{ModelType.HUBERT_VITS.value}] {fname}")
-        path = os.path.join(current_app.config.get('CACHE_PATH'), fname)
+        path = os.path.join(str(sys_config.get_config('DATA_DIR')), fname)
         save_audio(audio.getvalue(), path)
 
     if use_streaming:
@@ -286,7 +292,7 @@ def voice_w2v2_api():
 
     if current_app.config.get("SAVE_AUDIO", False):
         logger.debug(f"[{ModelType.W2V2_VITS.value}] {fname}")
-        path = os.path.join(current_app.config.get('CACHE_PATH'), fname)
+        path = os.path.join(str(sys_config.get_config("DATA_DIR")), fname)
         save_audio(audio.getvalue(), path)
 
     if use_streaming:
@@ -331,7 +337,7 @@ def vits_voice_conversion_api():
 
         if current_app.config.get("SAVE_AUDIO", False):
             logger.debug(f"[Voice conversion] {fname}")
-            path = os.path.join(current_app.config.get('CACHE_PATH'), fname)
+            path = os.path.join(str(sys_config.get_config("DATA_DIR")), fname)
             save_audio(audio.getvalue(), path)
 
         if use_streaming:
@@ -371,7 +377,7 @@ def ssml_api():
 
     if current_app.config.get("SAVE_AUDIO", False):
         logger.debug(f"[ssml] {fname}")
-        path = os.path.join(current_app.config.get('CACHE_PATH'), fname)
+        path = os.path.join(str(sys_config.get_config("DATA_DIR")), fname)
         save_audio(audio.getvalue(), path)
 
     return send_file(path_or_file=audio, mimetype=file_type, download_name=fname)

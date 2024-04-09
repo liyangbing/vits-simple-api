@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import requests
-import config
+import sys_config
 import socketio
 import json
 import logging
@@ -18,10 +18,10 @@ BACKENDS = {
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
-log_level = config.get_config("LOG_LEVEL")
+log_level = sys_config.get_config("LOG_LEVEL")
 logger.setLevel(log_level)
-server_url = config.get_config("SERVER_URL")
-api_key = config.get_config("API_KEY")
+server_url = sys_config.get_config("SERVER_URL")
+api_key = sys_config.get_config("API_KEY")
 sio = socketio.Client()
 
 
