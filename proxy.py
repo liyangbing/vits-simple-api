@@ -1,13 +1,12 @@
 from flask import Flask, request, jsonify
 import requests
-import sys_config
 import socketio
 import json
 import logging
 import mem_cache
 import threading
 import time
-
+import configparser
 
 # 定义后端服务器地址
 BACKENDS = {
@@ -17,11 +16,18 @@ BACKENDS = {
 }
 
 app = Flask(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(filename)s:%(lineno)d",
+)
 logger = logging.getLogger(__name__)
-log_level = sys_config.get_config("LOG_LEVEL")
+log_level = logging.INFO
 logger.setLevel(log_level)
-server_url = sys_config.get_config("SERVER_URL")
-api_key = sys_config.get_config("API_KEY")
+server_url = "https://api.roleip.com:8443"
+configloader = configparser.ConfigParser()
+configloader.read("config.ini")
+api_key = configloader.get("settings", "API_KEY", fallback="")
+print(api_key)
 sio = socketio.Client()
 
 
