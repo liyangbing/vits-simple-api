@@ -11,8 +11,8 @@ import time
 
 # 定义后端服务器地址
 BACKENDS = {
-    "audio": "http://127.0.0.1:50001",
-    "video": "http://127.0.0.1:50004",
+    "audio": "http://127.0.0.1:50001/voice/inference",
+    "video": "http://127.0.0.1:50004/video/inference",
     "picture": "http://127.0.0.1:50007",
 }
 
@@ -23,6 +23,7 @@ logger.setLevel(log_level)
 server_url = config.get_config("SERVER_URL")
 api_key = config.get_config("API_KEY")
 sio = socketio.Client()
+
 
 def reconnect():
     logger.info("Reconnecting to server")
@@ -50,9 +51,11 @@ def send_message(msg_type: str, msg: dict):
     logger.info("Sending message to server: {}".format(msg))
     sio.emit(msg_type, json.dumps(msg))
 
+
 @sio.on("connect")
 def connect():
     logger.info("Connected to server")
+
 
 def proxy_to_http(tag, req_data):
     backend_url = BACKENDS[tag]
@@ -65,6 +68,7 @@ def proxy_to_http(tag, req_data):
         timeout=30 * 60,
     )
     return resp.content
+
 
 def handle_msg(tag: str, msg: dict) -> dict:
     logger.info("Received message from server: {}".format(msg))
@@ -85,7 +89,8 @@ def handle_msg(tag: str, msg: dict) -> dict:
             retMsg["message"] = cache_message
             return retMsg
     mem_cache.add_to_cache(key, msg.get("message"), 10 * 60)
-    retMessage = proxy_to_http(tag, msg.get("message"))
+    retMessage = proxy_to_http(tag, json.dumps(msg.get("message")))
+    retMessage = json.loads(retMessage)
     retMsg["message"] = retMessage
     mem_cache.add_to_cache(key, retMessage, 10 * 60)
     return retMsg
