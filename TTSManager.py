@@ -214,7 +214,7 @@ class TTSManager(Observer):
                     raise ValueError(f"Unsupported model type: {task.get('model_type')}")
                 model_type = ModelType(model_type_str)
                 model = self.get_model(model_type, task.get("id"))
-                task["id"] = self.get_real_id(model_type, task.get("id"))
+                # task["id"] = self.get_real_id(model_type, task.get("id"))
                 sampling_rates.append(model.sampling_rate)
                 last_sampling_rate = model.sampling_rate
                 audio = self.infer_map[model_type](task, encode=False)
