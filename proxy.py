@@ -38,10 +38,6 @@ def reconnect():
             if not sio.connected:
                 sio.connect(server_url, retry=True)
                 logger.info("Connected to server")
-                sio.emit(
-                    "agent_join",
-                    json.dumps({"api_key": api_key, "service_type": "proxy"}),
-                )
                 logger.info("Connect sid: {}".format(sio.sid))
         except Exception as e:
             logger.error("Error in reconnect: {}".format(e))
@@ -61,6 +57,10 @@ def send_message(msg_type: str, msg: dict):
 @sio.on("connect")
 def connect():
     logger.info("Connected to server")
+    sio.emit(
+        "agent_join",
+        json.dumps({"api_key": api_key, "service_type": "proxy"})
+    )
 
 
 def proxy_to_http(tag, req_data):
