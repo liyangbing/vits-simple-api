@@ -76,6 +76,25 @@ def proxy_to_http(tag, req_data):
     return resp.content
 
 
+def get_all_status():
+    # 获取视频服务的忙闲状态，如果访问不通则设置为-1 离线状态
+    video_status = -1
+    audio_status = -1
+    try:
+        response = requests.get("http://127.0.0.1:50004/video/status")
+        if response.status_code == 200:
+            video_status = response.json().get("data").get("status")
+    except Exception as e:
+        logger.error(f"Error occurred while getting video status: {e}")
+    try:
+        response = requests.get("http://127.0.0.1:50001/voice/status")
+        if response.status_code == 200:
+            audio_status = response.json().get("data").get("status")
+    except Exception as e:
+        logger.error(f"Error occurred while getting audio status: {e}")
+    return {"video": video_status, "audio": audio_status}
+
+
 def handle_msg(tag: str, msg: dict) -> dict:
     logger.info("Received message from server: {}".format(msg))
     retMsg = {

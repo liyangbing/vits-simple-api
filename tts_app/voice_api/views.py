@@ -20,6 +20,7 @@ from tts_app.voice_api.cos_db import COSDB
 import base64
 import config
 import sys_config
+from threading import Lock
 
 voice_api = Blueprint("voice_api", __name__)
 BUCKET = str(sys_config.get_config("BUCKET"))
@@ -32,6 +33,8 @@ cosdb = COSDB(
     REGION,
     BUCKET,
 )
+req_counter = 0
+req_counter_lock = Lock()
 
 
 def get_param(request_data, key, default, data_type=None):
@@ -401,9 +404,21 @@ def dimensional_emotion_api():
     return send_file(path_or_file=emotion_npy, mimetype=file_type, download_name=fname)
 
 
+@voice_api.route("/status", methods=["GET"])
+def get_status():
+    global req_counter
+    status = 0
+    if req_counter > 0:
+        status = 1
+    return response_success({"status": status})
+
+
 @voice_api.route('/inference', methods=["GET", "POST"])
 @require_api_key
 def voice_bert_vits2_api():
+    global req_counter
+    with req_counter_lock:
+        req_counter += 1
     try:
         request_data = None
         if request.method == "GET":
@@ -418,12 +433,14 @@ def voice_bert_vits2_api():
     except Exception as e:
         logger.error(f"[{ModelType.BERT_VITS2.value}] {e}")
         return make_response("parameter error", 400)
-
-    
+    finally:
+        with req_counter_lock:
+            req_counter -= 1
 
     # return make_response(jsonify({"status": "success", "file_name": path}), 200)
 
     # return send_file(path_or_file=audio, mimetype=file_type, download_name=fname)
+
 
 def inner_voice_bert_vits2_api(request_data):
     try:
