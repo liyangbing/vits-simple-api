@@ -154,7 +154,7 @@ def receive_picture_message(msg):
 @sio.on("agent_status")
 def receive_status_message(msg):
     try:
-        retMsg = get_all_status
+        retMsg = get_all_status()
         if retMsg:
             send_message("agent_status", retMsg)
     except Exception as e:
