@@ -151,6 +151,16 @@ def receive_picture_message(msg):
         logger.error("Error occurred while handling message: {}".format(e))
 
 
+@sio.on("agent_status")
+def receive_status_message(msg):
+    try:
+        retMsg = get_all_status
+        if retMsg:
+            send_message("agent_status", retMsg)
+    except Exception as e:
+        logger.error("Error occurred while handling message: {}".format(e))
+
+
 @sio.on("agent_join")
 def join_room(room):
     logger.info("Joining room:".format(room))
