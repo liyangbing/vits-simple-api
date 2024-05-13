@@ -76,7 +76,13 @@ def proxy_to_http(tag, req_data):
     return resp.content
 
 
-def get_all_status():
+def get_all_status(msg: dict) -> dict:
+    retMsg = {
+        "room": msg.get("room"),
+        "messageId": msg.get("messageId"),
+        "messageType": msg.get("messageType"),
+        "message": msg.get("message"),
+    }
     # 获取视频服务的忙闲状态，如果访问不通则设置为-1 离线状态
     video_status = -1
     audio_status = -1
@@ -92,7 +98,8 @@ def get_all_status():
             audio_status = response.json().get("data").get("status")
     except Exception as e:
         logger.error(f"Error occurred while getting audio status: {e}")
-    return {"video": video_status, "audio": audio_status}
+    retMsg["message"] = {"video": video_status, "audio": audio_status}
+    return retMsg
 
 
 def handle_msg(tag: str, msg: dict) -> dict:
@@ -154,7 +161,7 @@ def receive_picture_message(msg):
 @sio.on("agent_status")
 def receive_status_message(msg):
     try:
-        retMsg = get_all_status()
+        retMsg = get_all_status(msg)
         if retMsg:
             send_message("agent_status", retMsg)
     except Exception as e:
