@@ -10,6 +10,8 @@ import io
 import hashlib
 import platform
 
+from contants import config
+
 MATPLOTLIB_FLAG = False
 
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
@@ -86,10 +88,10 @@ def load_checkpoint(
         decrypted_model = decrypt(key, iv, encrypted_model_data)
         # 使用io.BytesIO创建一个类似文件的对象
         model_stream = io.BytesIO(decrypted_model)
-        checkpoint_dict = torch.load(model_stream, map_location="cpu")
+        checkpoint_dict = torch.load(model_stream, map_location=config.system.device)
         model_stream.close()
     else:
-        checkpoint_dict = torch.load(checkpoint_path, map_location="cpu")
+        checkpoint_dict = torch.load(checkpoint_path, map_location=config.system.device)
     iteration = checkpoint_dict["iteration"]
     learning_rate = checkpoint_dict["learning_rate"]
     if (

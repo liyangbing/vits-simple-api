@@ -3,6 +3,7 @@ var currentModelPage = 1;
 var vitsSpeakersCount = 0;
 var w2v2SpeakersCount = 0;
 var bertVits2SpeakersCount = 0;
+var GPTSoVitsSpeakersCount = 0
 var selectedFile = null;
 
 function speakersInit() {
@@ -14,6 +15,7 @@ function speakersInit() {
             vitsSpeakersCount = data['VITS'].length;
             w2v2SpeakersCount = data['W2V2-VITS'].length;
             bertVits2SpeakersCount = data['BERT-VITS2'].length;
+            GPTSoVitsSpeakersCount = data['GPT-SOVITS'].length;
             showModelContentBasedOnStatus();
         },
         error: function (xhr, status, error) {
@@ -58,24 +60,42 @@ function getLink() {
     let id = document.getElementById("input_id" + currentModelPage).value;
     let format = document.getElementById("input_format" + currentModelPage).value;
     let lang = document.getElementById("input_lang" + currentModelPage).value;
-    let length = document.getElementById("input_length" + currentModelPage).value;
-    let noise = document.getElementById("input_noise" + currentModelPage).value;
-    let noisew = document.getElementById("input_noisew" + currentModelPage).value;
+    let api_key = document.getElementById("apiKey").value;
     let segment_size = document.getElementById("input_segment_size" + currentModelPage).value;
 
-    let url = baseUrl
+
+    let url = baseUrl;
+    let length = null;
+    let noise = null;
+    let noisew = null;
     let streaming = null;
     let sdp_ratio = null;
     let emotion = null;
     let text_prompt = "";
     let style_text = "";
     let style_weight = "";
+    let prompt_text = null;
+    let prompt_lang = null;
+    let preset = null;
+    let top_k = null;
+    let top_p = null;
+    let temperature = null;
+    let batch_size = null;
+    let speed = null;
+    let seed = null;
+
+    if (currentModelPage == 1 || currentModelPage == 2 || currentModelPage == 3) {
+        length = document.getElementById("input_length" + currentModelPage).value;
+        noise = document.getElementById("input_noise" + currentModelPage).value;
+        noisew = document.getElementById("input_noisew" + currentModelPage).value;
+    }
+
     if (currentModelPage == 1) {
         streaming = document.getElementById('streaming1');
-        url += "/voice/vits?text=" + text + "&id=" + id;
+        url += "/voice/vits?id=" + id;
     } else if (currentModelPage == 2) {
         emotion = document.getElementById('emotion').value;
-        url += "/voice/w2v2-vits?text=" + text + "&id=" + id + "&emotion=" + emotion;
+        url += "/voice/w2v2-vits?id=" + id + "&emotion=" + emotion;
     } else if (currentModelPage == 3) {
         sdp_ratio = document.getElementById("input_sdp_ratio").value;
         streaming = document.getElementById('streaming3');
@@ -83,28 +103,40 @@ function getLink() {
         text_prompt = document.getElementById('input_text_prompt3').value;
         style_text = document.getElementById('input_style_text3').value;
         style_weight = document.getElementById('input_style_weight3').value;
-        url += "/voice/bert-vits2?text=" + text + "&id=" + id;
+        url += "/voice/bert-vits2?id=" + id;
+    } else if (currentModelPage == 4) {
+        streaming = document.getElementById('streaming4');
+        prompt_text = document.getElementById('input_prompt_text4').value;
+        prompt_lang = document.getElementById('input_prompt_lang4').value;
+        preset = document.getElementById('input_preset4').value;
+        top_k = document.getElementById('input_top_k4').value;
+        top_p = document.getElementById('input_top_p4').value;
+        temperature = document.getElementById('input_temperature4').value;
+        batch_size = document.getElementById('input_batch_size4').value;
+        seed = document.getElementById('input_seed4').value;
+        speed = document.getElementById('input_speed4').value;
+        url += "/voice/gpt-sovits?id=" + id;
 
     } else {
         console.error("Invalid model page: ", currentModelPage);
         return null;
     }
-    if (format != "") {
+    if (format != "" && format != null) {
         url += "&format=" + format;
     }
-    if (lang != "") {
+    if (lang != "" && lang != null) {
         url += "&lang=" + lang;
     }
-    if (length != "") {
+    if (length != "" && length != null) {
         url += "&length=" + length;
     }
-    if (noise != "") {
+    if (noise != "" && noise != null) {
         url += "&noise=" + noise;
     }
-    if (noisew != "") {
+    if (noisew != "" && noisew != null) {
         url += "&noisew=" + noisew;
     }
-    if (segment_size != "") {
+    if (segment_size != "" && segment_size != null) {
         url += "&segment_size=" + segment_size;
     }
 
@@ -133,8 +165,34 @@ function getLink() {
             url += "&style_text=" + style_text;
         if (style_weight !== null && style_weight !== "")
             url += "&style_weight=" + style_weight;
+    } else if (currentModelPage == 4) {
+        if (streaming.checked)
+            url += '&streaming=true';
+        if (prompt_lang !== null && prompt_lang !== "")
+            url += "&prompt_lang=" + prompt_lang;
+        if (prompt_text !== null && prompt_text !== "")
+            url += "&prompt_text=" + prompt_text;
+        if (preset !== null && preset !== "")
+            url += "&preset=" + preset;
+        if (top_k !== null && top_k !== "")
+            url += "&top_k=" + top_k;
+        if (top_p !== null && top_p !== "")
+            url += "&top_p=" + top_p;
+        if (temperature !== null && temperature !== "")
+            url += "&temperature=" + temperature;
+        if (batch_size !== null && batch_size !== "")
+            url += "&batch_size=" + batch_size;
+        if (speed !== null && speed !== "")
+            url += "&speed=" + speed;
+        if (seed !== null && seed !== "")
+            url += "&seed=" + seed;
     }
 
+    if (api_key != "") {
+        url += "&api_key=" + api_key
+    }
+
+    url += "&text=" + text
     return url;
 }
 
@@ -187,22 +245,21 @@ function setAudioSourceByPost() {
     let id = $("#input_id" + currentModelPage).val();
     let format = $("#input_format" + currentModelPage).val();
     let lang = $("#input_lang" + currentModelPage).val();
-    let length = $("#input_length" + currentModelPage).val();
-    let noise = $("#input_noise" + currentModelPage).val();
-    let noisew = $("#input_noisew" + currentModelPage).val();
+
     let segment_size = $("#input_segment_size" + currentModelPage).val();
+    let api_key = $("#apiKey").val();
 
     let formData = new FormData();
     formData.append('text', text);
     formData.append('id', id);
     formData.append('format', format);
     formData.append('lang', lang);
-    formData.append('length', length);
-    formData.append('noise', noise);
-    formData.append('noisew', noisew);
     formData.append('segment_size', segment_size);
 
     let url = "";
+    let length = null;
+    let noise = null;
+    let noisew = null;
     let streaming = null;
     let sdp_ratio = null;
     // let length_zh = 0;
@@ -212,6 +269,26 @@ function setAudioSourceByPost() {
     let text_prompt = "";
     let style_text = "";
     let style_weight = "";
+    let prompt_text = null;
+    let prompt_lang = null;
+    let preset = null;
+    let top_k = null;
+    let top_p = null;
+    let temperature = null;
+    let batch_size = null;
+    let speed = null;
+    let seed = null;
+
+    let headers = {};
+
+    if (currentModelPage == 1 || currentModelPage == 2 || currentModelPage == 3) {
+        length = $("#input_length" + currentModelPage).val();
+        noise = $("#input_noise" + currentModelPage).val();
+        noisew = $("#input_noisew" + currentModelPage).val();
+        formData.append('length', length);
+        formData.append('noise', noise);
+        formData.append('noisew', noisew);
+    }
 
     if (currentModelPage == 1) {
         url = baseUrl + "/voice/vits";
@@ -230,10 +307,24 @@ function setAudioSourceByPost() {
         text_prompt = $("#input_text_prompt3").val();
         style_text = $("#input_style_text3").val();
         style_weight = $("#input_style_weight3").val();
+    } else if (currentModelPage == 4) {
+        url = baseUrl + "/voice/gpt-sovits";
+        streaming = $("#streaming4")[0];
+        prompt_text = $("#input_prompt_text4").val();
+        prompt_lang = $("#input_prompt_lang4").val();
+        preset = $("#input_preset4").val();
+        top_k = $("#input_top_k4").val();
+        top_p = $("#input_top_p4").val();
+        temperature = $("#input_temperature4").val();
+        batch_size = $("#input_batch_size4").val();
+        speed = $("#input_speed4").val();
+        seed = $("#input_seed4").val();
+
     }
 
+
     // 添加其他配置参数到 FormData
-    if ((currentModelPage == 1 || currentModelPage == 3) && streaming.checked) {
+    if ((currentModelPage == 1 || currentModelPage == 3 || currentModelPage == 4) && streaming.checked) {
         formData.append('streaming', true);
     }
     if (currentModelPage == 3 && sdp_ratio != "") {
@@ -251,7 +342,7 @@ function setAudioSourceByPost() {
     if ((currentModelPage == 2 || currentModelPage == 3) && emotion != null && emotion != "") {
         formData.append('emotion', emotion);
     }
-    if (currentModelPage == 3 && selectedFile) {
+    if ((currentModelPage == 3 || currentModelPage == 4) && selectedFile) {
         formData.append('reference_audio', selectedFile);
     }
     if (currentModelPage == 3 && text_prompt) {
@@ -262,6 +353,37 @@ function setAudioSourceByPost() {
     }
     if (currentModelPage == 3 && style_weight) {
         formData.append('style_weight', style_weight);
+    }
+    if (api_key !== "") {
+        headers['X-API-KEY'] = api_key;
+    }
+    if (currentModelPage == 4 && prompt_text) {
+        formData.append('prompt_text', prompt_text);
+    }
+
+    if (currentModelPage == 4 && prompt_lang) {
+        formData.append('prompt_lang', prompt_lang);
+    }
+    if (currentModelPage == 4 && preset) {
+        formData.append('preset', preset);
+    }
+    if (currentModelPage == 4 && top_k) {
+        formData.append('top_k', top_k);
+    }
+    if (currentModelPage == 4 && top_p) {
+        formData.append('top_p', top_p);
+    }
+    if (currentModelPage == 4 && temperature) {
+        formData.append('temperature', temperature);
+    }
+    if (currentModelPage == 4 && batch_size) {
+        formData.append('batch_size', batch_size);
+    }
+    if (currentModelPage == 4 && speed) {
+        formData.append('speed', speed);
+    }
+    if (currentModelPage == 4 && seed) {
+        formData.append('seed', seed);
     }
 
     let downloadButton = document.getElementById("downloadButton" + currentModelPage);
@@ -277,6 +399,7 @@ function setAudioSourceByPost() {
         xhrFields: {
             responseType: 'blob'
         },
+        headers: headers,
         success: function (response, status, xhr) {
             let blob = new Blob([response], {type: 'audio/wav'});
             let audioPlayer = document.getElementById("audioPlayer" + currentModelPage);
@@ -289,8 +412,10 @@ function setAudioSourceByPost() {
             downloadButton.disabled = false;
         },
         error: function (error) {
-            console.error('Error:', error);
-            alert("无法获取音频数据");
+            // console.error('Error:', error);
+            let message = "无法获取音频数据，请查看日志！";
+            console.log(message)
+            alert(message);
             downloadButton.disabled = true;
         }
     });
@@ -343,10 +468,52 @@ function showModelContentBasedOnStatus() {
         showContent(1);
     } else if (bertVits2SpeakersCount > 0) {
         showContent(2);
+    } else if (GPTSoVitsSpeakersCount > 0) {
+        showContent(3);
     } else {
         showContent(0);
     }
 }
+
+function updatePlaceholders(config, page) {
+    for (let key in config) {
+        if (key == "presets") {
+            let data = config[key];
+            let selectElement = $("#input_preset" + page);
+            selectElement.empty(); // 清除现有的选项
+            let isFirst = true;
+            for (let name in data) {
+                let preset_value = data[name];
+                let preset = `[${name}] audio: ${preset_value["refer_wav_path"]}`;
+                // 创建preset
+                let option = $("<option>", {
+                    value: name,
+                    text: preset,
+                    'data-prompt-lang': preset_value["prompt_lang"],
+                    'data-prompt-text': preset_value["prompt_text"]
+                });
+                selectElement.append(option);
+                // 自动填入第一个preset的参考文本
+                if (isFirst) {
+                    $("#input_prompt_lang" + page).val(preset_value["prompt_lang"]);
+                    $("#input_prompt_text" + page).val(preset_value["prompt_text"]);
+                    isFirst = false;
+                }
+            }
+            // 当选择改变时更新输入预设的值
+            selectElement.change(function () {
+                let selectedOption = $(this).find(":selected");
+                let promptLang = selectedOption.data("prompt-lang");
+                let promptText = selectedOption.data("prompt-text");
+                $("#input_prompt_lang" + page).val(promptLang);
+                $("#input_prompt_text" + page).val(promptText);
+            });
+        } else {
+            $("#input_" + key + page).attr("placeholder", config[key]);
+        }
+    }
+}
+
 
 function setDefaultParameter() {
     $.ajax({
@@ -355,16 +522,55 @@ function setDefaultParameter() {
         responseType: 'json',
         success: function (response) {
             default_parameter = response;
-            for (var key in default_parameter) {
-                if (default_parameter.hasOwnProperty(key)) {
-                    $(".input_" + key).attr("placeholder", default_parameter[key]);
-                }
-            }
+            updatePlaceholders(default_parameter.vits_config, 1);
+            updatePlaceholders(default_parameter.w2v2_vits_config, 2);
+            updatePlaceholders(default_parameter.bert_vits2_config, 3);
+            updatePlaceholders(default_parameter.gpt_sovits_config, 4);
         },
         error: function (error) {
         }
     });
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    var apiKeyIcon = document.getElementById('apiKeyIcon');
+    var apiKeyInput = document.getElementById('apiKeyInput');
+    var apiKeyField = document.getElementById('apiKey');
+
+    // 检查 apiKey 是否已存储在 localStorage 中
+    var storedApiKey = localStorage.getItem('apiKey');
+    if (storedApiKey) {
+        apiKeyField.value = storedApiKey;
+    }
+
+    // 点击图标时切换 apiKeyInput 的可见性
+    apiKeyIcon.addEventListener('click', function (event) {
+        apiKeyInput.style.display = apiKeyInput.style.display === 'flex' ? 'none' : 'flex';
+        // 停止事件传播，防止文档点击事件立即隐藏输入框
+        event.stopPropagation();
+    });
+
+    // 在点击其他地方时隐藏 apiKeyInput
+    document.addEventListener('click', function () {
+        apiKeyInput.style.display = 'none';
+    });
+
+    // 防止点击输入框时输入框被隐藏
+    apiKeyInput.addEventListener('click', function (event) {
+        event.stopPropagation();
+    });
+});
+
+function saveApiKey() {
+    var apiKeyField = document.getElementById('apiKey');
+    var apiKey = apiKeyField.value;
+
+    // 将 apiKey 保存到 localStorage 中
+    localStorage.setItem('apiKey', apiKey);
+
+    document.getElementById('apiKeyInput').style.display = 'none';
+}
+
 
 $(document).ready(function () {
     speakersInit();

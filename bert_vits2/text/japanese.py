@@ -205,7 +205,6 @@ _ALPHASYMBOL_YOMI = {
     "ω": "オメガ",
 }
 
-
 _NUMBER_WITH_SEPARATOR_RX = re.compile("[0-9]{1,3}(,[0-9]{3})+")
 _CURRENCY_MAP = {"$": "ドル", "¥": "円", "£": "ポンド", "€": "ユーロ"}
 _CURRENCY_RX = re.compile(r"([$¥£€])([0-9.]*[0-9])")
@@ -382,7 +381,7 @@ def rearrange_tones(tones, phones):
     return res
 
 
-def g2p(norm_text, tokenizer):
+def g2p(norm_text, tokenizer, **kwargs):
     sep_text, sep_kata, acc = text2sep_kata(norm_text)
     sep_tokenized = []
     for i in sep_text:
@@ -414,15 +413,16 @@ def g2p(norm_text, tokenizer):
 
 
 if __name__ == "__main__":
-    from transformers import AutoTokenizer
-    tokenizer = AutoTokenizer.from_pretrained("./bert/deberta-v2-large-japanese")
+    from manager import model_handler
+
+    tokenizer, _ = model_handler.get_bert_model("DEBERTA_V2_LARGE_JAPANESE_CHAR_WWM")
     text = "hello,こんにちは、世界ー！……"
     from bert_vits2.text.japanese_bert import get_bert_feature
 
     text = text_normalize(text)
     print(text)
 
-    phones, tones, word2ph = g2p(text)
+    phones, tones, word2ph = g2p(text, tokenizer)
     bert = get_bert_feature(text, word2ph)
 
     print(phones, tones, word2ph, bert.shape)

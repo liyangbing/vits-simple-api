@@ -1,17 +1,23 @@
-import json
 import logging
-from copy import deepcopy
+import os
 
-import torch
 from flask import Blueprint, request, render_template, make_response, jsonify
 from flask_login import login_required
 
-from tts_app.auth.models import user2str, str2user
+from contants import config
 from tts_app.model_manager import model_manager
-from utils import config_manager
-from utils.config_manager import global_config
 
 admin = Blueprint('admin', __name__)
+
+
+def extract_filename_and_directory(path):
+    filename = os.path.basename(path)
+    directory = os.path.dirname(path)
+    directory_name = os.path.basename(directory)
+    if not directory:  # 如果文件所在文件夹为空（即在根目录）
+        return filename
+    else:
+        return directory_name + "/" + filename
 
 
 @admin.route('/')
@@ -29,7 +35,22 @@ def setting():
 @admin.route('/get_models_info', methods=["GET", "POST"])
 @login_required
 def get_models_info():
-    return model_manager.get_models_info()
+    loaded_models_info = model_manager.get_models_info()
+    for models in loaded_models_info.values():
+        for model in models:
+            if model.get("model_path") is not None:
+                model["model_path"] = extract_filename_and_directory(model["model_path"])
+
+            if model.get("config_path") is not None:
+                model["config_path"] = extract_filename_and_directory(model["config_path"])
+
+            if model.get("sovits_path") is not None:
+                model["sovits_path"] = extract_filename_and_directory(model["sovits_path"])
+
+            if model.get("gpt_path") is not None:
+                model["gpt_path"] = extract_filename_and_directory(model["gpt_path"])
+
+    return loaded_models_info
 
 
 @admin.route('/load_model', methods=["GET", "POST"])
@@ -46,10 +67,18 @@ def load_model():
 
     model_path = request_data.get("model_path")
     config_path = request_data.get("config_path")
-    logging.info(f"Loading model\n"
-                 f"model_path: {model_path}\n"
-                 f"config_path: {config_path}")
-    state = model_manager.load_model(model_path, config_path)
+    sovits_path = request_data.get("sovits_path")
+    gpt_path = request_data.get("gpt_path")
+
+    if model_path is not None and config_path is not None:
+        logging.info(f"Loading model model_path: {model_path} config_path: {config_path}")
+    else:
+        logging.info(f"Loading model sovits_path: {sovits_path} gpt_path: {gpt_path}")
+
+    state = model_manager.load_model(model_path=model_path,
+                                     config_path=config_path,
+                                     sovits_path=sovits_path,
+                                     gpt_path=gpt_path)
     if state:
         status = "success"
         response_code = 200
@@ -90,18 +119,13 @@ def unload_model():
 @admin.route('/get_path', methods=["GET", "POST"])
 @login_required
 def get_path():
-    return model_manager.scan_path()
+    return model_manager.scan_unload_path()
 
 
 @admin.route('/get_config', methods=["GET", "POST"])
 @login_required
 def get_config():
-    dict_data = deepcopy(dict(global_config))
-    dict_data["DEVICE"] = str(dict_data["DEVICE"])
-
-    dict_data = user2str(dict_data)
-    
-    return jsonify(dict_data)
+    return jsonify(config.asdict())
 
 
 @admin.route('/set_config', methods=["GET", "POST"])
@@ -114,17 +138,21 @@ def set_config():
         else:
             request_data = request.form
 
-    dict_data = dict(request_data)
-    # dict_data["DEVICE"] = torch.device(dict_data["DEVICE"])
-    if dict_data.get("users", None) is not None:
-        dict_data = str2user(dict_data)
-    dict_data = config_manager.validate_and_convert_data(dict_data)
-    dict_data["model_config"]["model_list"] = global_config["model_config"]["model_list"]
-    global_config.update(dict_data)
-    config_manager.save_yaml_config(global_config)
-
+    # try:
+    #     new_config = dict(request_data)
+    #     config.update_config(new_config)
+    #     status = "success"
+    #     code = 200
+    # except Exception as e:
+    #     status = "failed"
+    #     code = 500
+    #     logging.error(e)
+    new_config = dict(request_data)
+    config.update_config(new_config)
+    config.save_config(config)
     status = "success"
-    return make_response(jsonify({"status": status}), 200)
+    code = 200
+    return make_response(jsonify({"status": status}), code)
 
 
 @admin.route('/save_current_model', methods=["GET", "POST"])
@@ -132,9 +160,10 @@ def set_config():
 def save_current_model():
     try:
         models_path = model_manager.get_models_path()
-        model_list = {"model_list": models_path}
-        global_config["model_config"].update(model_list)
-        config_manager.save_yaml_config(global_config)
+        models = {"models": models_path}
+
+        config.update_config({"tts_config": models})
+        config.save_config(config)
 
         status = "success"
         response_code = 200
@@ -142,4 +171,5 @@ def save_current_model():
         status = "failed"
         response_code = 500
         logging.info(e)
+
     return make_response(jsonify({"status": status}), response_code)

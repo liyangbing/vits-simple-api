@@ -89,7 +89,7 @@ def _get_initials_finals(word):
     return initials, finals
 
 
-def _g2p(segments):
+def _g2p(segments, **kwargs):
     phones_list = []
     tones_list = []
     word2ph = []

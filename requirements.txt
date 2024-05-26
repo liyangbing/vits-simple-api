@@ -10,7 +10,7 @@ graiax-silkcoder[libsndfile]
 
 # Natural Language Processing and Text Conversion
 unidecode
-pyopenjtalk==0.3.2
+pyopenjtalk
 jamo
 pypinyin
 pypinyin-dict
@@ -35,9 +35,12 @@ sentencepiece==0.1.99
 jaconv
 
 # Machine Learning and Deep Learning
-torch==1.13.0
-audonnx
-vector_quantize_pytorch
+torch>=2.2.1
+onnx==1.12.0
+audonnx==0.7.0
+vector_quantize_pytorch==1.12.12
+pytorch_lightning
+torchmetrics
 
 # Web and API services
 flask==2.2.3
@@ -46,6 +49,7 @@ pydantic==2.3.0
 werkzeug==2.3.6
 flask_login
 flask_wtf
+ngrok
 
 # Compression and Decompression
 py7zr
